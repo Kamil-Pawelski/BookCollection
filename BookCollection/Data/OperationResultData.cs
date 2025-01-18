@@ -1,4 +1,4 @@
-﻿namespace BookCollection.Data.Models;
+﻿namespace BookCollection.Data;
 
 public class OperationResultData<T>
 {

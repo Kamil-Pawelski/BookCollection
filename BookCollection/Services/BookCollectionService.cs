@@ -3,7 +3,7 @@ using BookCollection.Data.Models;
 using BookCollection.Data.DTO;
 using Serilog;
 using System.Text.Json;
- 
+
 namespace BookCollection.Services;
 
 public interface IBookCollectionService
