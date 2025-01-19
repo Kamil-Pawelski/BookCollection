@@ -13,18 +13,15 @@ public class BookCollectionControllerTests
     public BookCollectionControllerTests()
     {
         var configuration = new ConfigurationBuilder()
+         .AddJsonFile("appsettings.json")
          .AddJsonFile("appsettings.Staging.json")
          .Build();
 
         AppConfigurationConstants.Initialize(configuration);
 
-        _bookCollectionService = new ServiceCollection()
-            .AddTransient<IBookCollectionService, BookCollectionService>()
-            .BuildServiceProvider()
-            .GetRequiredService<IBookCollectionService>();
+        _bookCollectionService = new BookCollectionService();
 
     }
-
     [Fact]
     public void AddBook()
     {
