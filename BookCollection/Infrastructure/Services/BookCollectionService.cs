@@ -177,17 +177,18 @@ public class BookCollectionService : IBookCollectionService
                 var fileText = File.ReadAllText(AppConfigurationConstants.BookCollectionFile);
                 var booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
                 var sortedBooks = new List<Book>();
-                if (bookSearch.Title != null && bookSearch.Author != null)
+
+                if (!string.IsNullOrWhiteSpace(bookSearch.Title) && !string.IsNullOrWhiteSpace(bookSearch.Author))
                 {
                     sortedBooks = booksList.Where(book => book.Title.Equals(bookSearch.Title) && book.Author.Equals(bookSearch.Author)).ToList();
                 }
-                else if(bookSearch.Title == null && bookSearch.Author != null)
-                {
-                    sortedBooks = booksList.Where(book => book.Author.Equals(bookSearch.Author)).ToList();
-                }
-                else if (bookSearch.Title != null && bookSearch.Author == null)
+                else if(!string.IsNullOrWhiteSpace(bookSearch.Title) && string.IsNullOrWhiteSpace(bookSearch.Author))
                 {
                     sortedBooks = booksList.Where(book => book.Title.Equals(bookSearch.Title)).ToList();
+                }
+                else if (string.IsNullOrWhiteSpace(bookSearch.Title) && !string.IsNullOrWhiteSpace(bookSearch.Author))
+                {
+                    sortedBooks = booksList.Where(book => book.Author.Equals(bookSearch.Author)).ToList();
                 }
                 else
                 {

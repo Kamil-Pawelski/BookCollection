@@ -3,7 +3,6 @@ using BookCollection.Configuration;
 using BookCollection.Domain;
 using BookCollection.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
-
 namespace BookCollection.Tests;
 
 public class BookCollectionControllerTests : IDisposable
@@ -186,70 +185,33 @@ public class BookCollectionControllerTests : IDisposable
         Assert.Equal(OperationStatusCode.NotFound, result.StatusCode);
     }
 
-    [Fact]
-    public void GetBooksByTitleOrAuthor_AuthorAndTitle_Ok()
+    [Theory]
+    [InlineData("Some random book", "", true)]
+    [InlineData("", "Jacob Wal", true)]
+    [InlineData("Some random book", "Jacob Wal", true)]
+    [InlineData("Next das", "Jacob Wal", false)]
+    public void GetBooksByTitleOrAuthor_AuthorAndTitle_Ok(string title, string author, bool boolResult)
     {
         var booksToAdd = new List<BookAddDTO>(){
-            new()
-            {
-                Author = "Jacob Wal",
-                Title = "Some random book",
-                Year = 2013
-            },
-            new()
-            {
-                Author = "Adam Szym",
-                Title = "Next das",
-                Year = 2010
-            },
-            new()
-            {
-                Author = "Kim Min",
-                Title = "Han guk",
-                Year = 2019
-            },
-        };
-
-        foreach (var book in booksToAdd)
-        {
-            _bookCollectionService.AddBook(book);
-        }
-
-
-        var searchDTO = new BookSearchDTO()
+        new()
         {
             Author = "Jacob Wal",
-            Title = "Some random book"
-        };
-        var result = _bookCollectionService.GetBooksByTitleOrAuthor(searchDTO);        
-
-        Assert.NotEmpty(result.Data);
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
-    }
-
-    [Fact]
-    public void GetBooksByTitleOrAuthor_AuthorAndTitle_Empty_Ok()
-    {
-        var booksToAdd = new List<BookAddDTO>(){
-            new()
-            {
-                Author = "Jacob Wal",
-                Title = "Some random book",
-                Year = 2013
-            },
-            new()
-            {
-                Author = "Adam Szym",
-                Title = "Next das",
-                Year = 2010
-            },
-            new()
-            {
-                Author = "Kim Min",
-                Title = "Han guk",
-                Year = 2019
-            },
-        };
+            Title = "Some random book",
+            Year = 2013
+        },
+        new()
+        {
+            Author = "Adam Szym",
+            Title = "Next das",
+            Year = 2010
+        },
+        new()
+        {
+            Author = "Kim Min",
+            Title = "Han guk",
+            Year = 2019
+        },
+    };
 
         foreach (var book in booksToAdd)
         {
@@ -258,90 +220,20 @@ public class BookCollectionControllerTests : IDisposable
 
         var searchDTO = new BookSearchDTO()
         {
-            Author = "Jacob Wal",
-            Title = "Next das"
+            Title = title,
+            Author = author
         };
+
         var result = _bookCollectionService.GetBooksByTitleOrAuthor(searchDTO);
 
-        Assert.Empty(result.Data);
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
-    }
-
-    [Fact]
-    public void GetBooksByTitleOrAuthor_Title_Ok()
-    {
-        var booksToAdd = new List<BookAddDTO>(){
-            new()
-            {
-                Author = "Jacob Wal",
-                Title = "Some random book",
-                Year = 2013
-            },
-            new()
-            {
-                Author = "Adam Szym",
-                Title = "Next das",
-                Year = 2010
-            },
-            new()
-            {
-                Author = "Kim Min",
-                Title = "Han guk",
-                Year = 2019
-            },
-        };
-
-        foreach (var book in booksToAdd)
+        if (boolResult)
         {
-            _bookCollectionService.AddBook(book);
+            Assert.NotEmpty(result.Data);
         }
-
-        var searchDTO = new BookSearchDTO()
+        else
         {
-            Title = "Some random book"
-        };
-        var result = _bookCollectionService.GetBooksByTitleOrAuthor(searchDTO);
-
-        Assert.NotEmpty(result.Data);
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
-    }
-
-    [Fact]
-    public void GetBooksByTitleOrAuthor_Auhtor_Ok()
-    {
-        var booksToAdd = new List<BookAddDTO>(){
-            new()
-            {
-                Author = "Jacob Wal",
-                Title = "Some random book",
-                Year = 2013
-            },
-            new()
-            {
-                Author = "Adam Szym",
-                Title = "Next das",
-                Year = 2010
-            },
-            new()
-            {
-                Author = "Kim Min",
-                Title = "Han guk",
-                Year = 2019
-            },
-        };
-
-        foreach (var book in booksToAdd)
-        {
-            _bookCollectionService.AddBook(book);
+            Assert.Empty(result.Data);
         }
-
-        var searchDTO = new BookSearchDTO()
-        {
-            Author = "Jacob Wal",
-        };
-        var result = _bookCollectionService.GetBooksByTitleOrAuthor(searchDTO);
-
-        Assert.NotEmpty(result.Data);
         Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
     }
 
