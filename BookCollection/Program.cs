@@ -1,4 +1,5 @@
-using BookCollection.Services;
+using BookCollection.Configuration;
+using BookCollection.Infrastructure.Services;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -16,6 +17,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 // Services
 builder.Services.AddScoped<IBookCollectionService, BookCollectionService>();
+AppConfigurationConstants.Initialize(builder.Configuration);
 
 var app = builder.Build();
 

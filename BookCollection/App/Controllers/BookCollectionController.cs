@@ -1,10 +1,10 @@
-﻿using BookCollection.Data;
-using BookCollection.Data.DTO;
-using BookCollection.Routes;
-using BookCollection.Services;
+﻿using BookCollection.App.DTO;
+using BookCollection.App.Routes;
+using BookCollection.Domain;
+using BookCollection.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
-namespace BookCollection.Controllers;
+namespace BookCollection.App.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
@@ -52,7 +52,7 @@ public class BookCollectionController : ControllerBase
     [Route(BookCollectionRoutes.AddBook)]
     public IActionResult AddBook([FromBody] BookAddDTO bookDTO)
     {
-        if(bookDTO == null)
+        if (bookDTO == null)
         {
             return BadRequest("Invalid data in the request body.");
         }
@@ -76,7 +76,7 @@ public class BookCollectionController : ControllerBase
             return BadRequest("Invalid data in the request body.");
         }
 
-        var result =  _bookCollectionService.UpdateBook(bookDTO);
+        var result = _bookCollectionService.UpdateBook(bookDTO);
 
         if (result.StatusCode == OperationStatusCode.NotFound)
         {
@@ -112,7 +112,7 @@ public class BookCollectionController : ControllerBase
     [Route(BookCollectionRoutes.GetBookByTitleOrAuthor)]
     public IActionResult GetBooksByTitleOrAuthor([FromQuery] BookSearchDTO bookSearchDTO)
     {
-        if (bookSearchDTO == null) 
+        if (bookSearchDTO == null)
         {
             return BadRequest("Invalid data in the request body.");
         }

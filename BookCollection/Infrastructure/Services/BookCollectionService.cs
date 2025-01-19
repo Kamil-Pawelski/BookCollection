@@ -1,10 +1,11 @@
-﻿using BookCollection.Data;
-using BookCollection.Data.Models;
-using BookCollection.Data.DTO;
-using Serilog;
+﻿using Serilog;
 using System.Text.Json;
+using BookCollection.Domain.Models;
+using BookCollection.App.DTO;
+using BookCollection.Domain;
+using BookCollection.Configuration;
 
-namespace BookCollection.Services;
+namespace BookCollection.Infrastructure.Services;
 
 public interface IBookCollectionService
 {
@@ -19,7 +20,6 @@ public interface IBookCollectionService
 
 public class BookCollectionService : IBookCollectionService
 {
-    private readonly string _fileName = "books.json";
     //_dbcontext for now json
     public static int CurrentBookId = 1; // Just for this example with DB Guid.NewGuid()
 
@@ -27,12 +27,12 @@ public class BookCollectionService : IBookCollectionService
     {
         try
         {
-            if (File.Exists(_fileName))
+            if (File.Exists(AppConfigurationConstants.BookCollectionFile))
             {
-                var fileText = File.ReadAllText(_fileName);
+                var fileText = File.ReadAllText(AppConfigurationConstants.BookCollectionFile);
                 var booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
 
-                return new OperationResultData<List<Book>> { StatusCode = OperationStatusCode.Ok, Data = booksList};
+                return new OperationResultData<List<Book>> { StatusCode = OperationStatusCode.Ok, Data = booksList };
             }
             return new OperationResultData<List<Book>> { StatusCode = OperationStatusCode.Ok, Data = [] };
         }
@@ -47,9 +47,9 @@ public class BookCollectionService : IBookCollectionService
     {
         try
         {
-            if (File.Exists(_fileName))
+            if (File.Exists(AppConfigurationConstants.BookCollectionFile))
             {
-                var fileText = File.ReadAllText(_fileName);
+                var fileText = File.ReadAllText(AppConfigurationConstants.BookCollectionFile);
                 var booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
                 var bookToReturn = booksList.FirstOrDefault(book => book.Id == id);
 
@@ -78,9 +78,9 @@ public class BookCollectionService : IBookCollectionService
                 Year = newBook.Year,
             };
 
-            if (File.Exists(_fileName))
+            if (File.Exists(AppConfigurationConstants.BookCollectionFile))
             {
-                var fileText = File.ReadAllText(_fileName);
+                var fileText = File.ReadAllText(AppConfigurationConstants.BookCollectionFile);
                 booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
             }
             else
@@ -92,7 +92,7 @@ public class BookCollectionService : IBookCollectionService
 
             var updatedBooksJson = JsonSerializer.Serialize(booksList);
 
-            File.WriteAllText(_fileName, updatedBooksJson);
+            File.WriteAllText(AppConfigurationConstants.BookCollectionFile, updatedBooksJson);
             return new OperationResult { StatusCode = OperationStatusCode.Ok };
         }
         catch (Exception ex)
@@ -106,9 +106,9 @@ public class BookCollectionService : IBookCollectionService
     {
         try
         {
-            if (File.Exists(_fileName))
+            if (File.Exists(AppConfigurationConstants.BookCollectionFile))
             {
-                var fileText = File.ReadAllText(_fileName);
+                var fileText = File.ReadAllText(AppConfigurationConstants.BookCollectionFile);
                 var booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
 
                 var bookToUpdate = booksList.FirstOrDefault(book => book.Id == updatedBook.Id);
@@ -119,10 +119,10 @@ public class BookCollectionService : IBookCollectionService
                     bookToUpdate.Year = updatedBook.Year;
                     var updatedBooksJson = JsonSerializer.Serialize(booksList);
 
-                    File.WriteAllText(_fileName, updatedBooksJson);
+                    File.WriteAllText(AppConfigurationConstants.BookCollectionFile, updatedBooksJson);
                     return new OperationResult { StatusCode = OperationStatusCode.Ok };
                 }
-                return new OperationResult { StatusCode = OperationStatusCode.NotFound , Message = "The requested book does not exist" };
+                return new OperationResult { StatusCode = OperationStatusCode.NotFound, Message = "The requested book does not exist" };
             }
             return new OperationResult { StatusCode = OperationStatusCode.InternalError, Message = "No data exist" };
         }
@@ -138,9 +138,9 @@ public class BookCollectionService : IBookCollectionService
     {
         try
         {
-            if (File.Exists(_fileName))
+            if (File.Exists(AppConfigurationConstants.BookCollectionFile))
             {
-                var fileText = File.ReadAllText(_fileName);
+                var fileText = File.ReadAllText(AppConfigurationConstants.BookCollectionFile);
                 var booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
 
                 var bookToRemove = booksList.FirstOrDefault(book => book.Id == id);
@@ -150,7 +150,7 @@ public class BookCollectionService : IBookCollectionService
 
                     var updatedBooksJson = JsonSerializer.Serialize(booksList);
 
-                    File.WriteAllText(_fileName, updatedBooksJson);
+                    File.WriteAllText(AppConfigurationConstants.BookCollectionFile, updatedBooksJson);
                     return new OperationResult { StatusCode = OperationStatusCode.Ok };
                 }
                 return new OperationResult { StatusCode = OperationStatusCode.NotFound, Message = "The requested book does not exist" };
@@ -168,14 +168,14 @@ public class BookCollectionService : IBookCollectionService
     {
         try
         {
-            if (File.Exists(_fileName))
+            if (File.Exists(AppConfigurationConstants.BookCollectionFile))
             {
-                var fileText = File.ReadAllText(_fileName);
+                var fileText = File.ReadAllText(AppConfigurationConstants.BookCollectionFile);
                 var booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
                 var sortedBooks = booksList.Where(book => book.Title.Equals(bookSearch.Title) || book.Author.Equals(bookSearch.Author)).ToList();
                 return new OperationResultData<List<Book>> { StatusCode = OperationStatusCode.Ok, Data = sortedBooks };
             }
-            return new OperationResultData<List<Book>> { StatusCode = OperationStatusCode.Ok, Data = []};
+            return new OperationResultData<List<Book>> { StatusCode = OperationStatusCode.Ok, Data = [] };
         }
         catch (Exception ex)
         {

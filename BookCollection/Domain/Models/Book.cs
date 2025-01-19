@@ -1,6 +1,6 @@
-﻿namespace BookCollection.Data.DTO;
+﻿namespace BookCollection.Domain.Models;
 
-public class BookDTO
+public class Book
 {
     public int Id { get; set; }
     public string Title { get; set; }

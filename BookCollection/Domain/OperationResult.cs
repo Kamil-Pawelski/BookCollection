@@ -1,4 +1,4 @@
-﻿namespace BookCollection.Data;
+﻿namespace BookCollection.Domain;
 
 public class OperationResult
 {

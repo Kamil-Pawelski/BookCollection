@@ -1,4 +1,4 @@
-﻿namespace BookCollection.Data.DTO;
+﻿namespace BookCollection.App.DTO;
 
 public class BookAddDTO
 {

@@ -1,47 +1,48 @@
-using BookCollection.Controllers;
-using BookCollection.Data.DTO;
-using BookCollection.Services;
-using NSubstitute;
+using BookCollection.App.DTO;
+using BookCollection.Configuration;
+using BookCollection.Infrastructure.Services;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 
 
 namespace BookCollection.Tests;
 
 public class BookCollectionControllerTests
 {
-    private readonly BookCollectionController _controller;
-    private readonly IBookCollectionService _mockBookCollectionService;
-    public BookCollectionControllerTests(BookCollectionController controller)
+    private readonly IBookCollectionService _bookCollectionService;
+    public BookCollectionControllerTests()
     {
-        _mockBookCollectionService = Substitute.For<IBookCollectionService>();
-        _controller = new BookCollectionController(_mockBookCollectionService);
+        var configuration = new ConfigurationBuilder()
+         .AddJsonFile("appsettings.Staging.json")
+         .Build();
+
+        AppConfigurationConstants.Initialize(configuration);
+
+        _bookCollectionService = new ServiceCollection()
+            .AddTransient<IBookCollectionService, BookCollectionService>()
+            .BuildServiceProvider()
+            .GetRequiredService<IBookCollectionService>();
+
     }
 
     [Fact]
-    public void GetAllBooks()
+    public void AddBook()
     {
-        var Books = new List<BookAddDTO>()
+        var book = new BookAddDTO()
         {
-            new() 
-            {
-                Title = "The Lord of the Rings",
-                Author = "J.R.R. Tolkien",
-                Year = 1954
-            },
-            new()
-            {
-                Title = "1984",
-                Author = "George Orwell",
-                Year = 1949
-            }
+            Author = "Jacob Wal",
+            Title = "Some random book",
+            Year = 2013
         };
 
+        _bookCollectionService.AddBook(book);
 
-        foreach (var book in Books) 
-        {
-            _mockBookCollectionService.AddBook(book);
-        }
+        var addedBook = (_bookCollectionService.GetBooks().Data).FirstOrDefault();
+        Assert.NotNull(addedBook);
+        Assert.Equal(book.Author, addedBook.Author);
+        Assert.Equal(book.Title, addedBook.Title);
+        Assert.Equal(book.Year, addedBook.Year);
 
-        var result = _controller.GetBooks();
-
+        File.Delete(AppConfigurationConstants.BookCollectionFile);
     }
 }
