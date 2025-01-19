@@ -53,7 +53,11 @@ public class BookCollectionService : IBookCollectionService
                 var booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
                 var bookToReturn = booksList.FirstOrDefault(book => book.Id == id);
 
-                return new OperationResultData<Book> { StatusCode = OperationStatusCode.Ok, Data = bookToReturn };
+                if (bookToReturn != null)
+                {
+                    return new OperationResultData<Book> { StatusCode = OperationStatusCode.Ok, Data = bookToReturn };
+                }
+                return new OperationResultData<Book> { StatusCode = OperationStatusCode.NotFound, Message = "The requested book does not exist." };
             }
             return new OperationResultData<Book> { StatusCode = OperationStatusCode.InternalError, Message = "A general error occurred while processing the request" };
         }
@@ -122,7 +126,7 @@ public class BookCollectionService : IBookCollectionService
                     File.WriteAllText(AppConfigurationConstants.BookCollectionFile, updatedBooksJson);
                     return new OperationResult { StatusCode = OperationStatusCode.Ok };
                 }
-                return new OperationResult { StatusCode = OperationStatusCode.NotFound, Message = "The requested book does not exist" };
+                return new OperationResult { StatusCode = OperationStatusCode.NotFound, Message = "The requested book does not exist." };
             }
             return new OperationResult { StatusCode = OperationStatusCode.InternalError, Message = "No data exist" };
         }
@@ -153,7 +157,7 @@ public class BookCollectionService : IBookCollectionService
                     File.WriteAllText(AppConfigurationConstants.BookCollectionFile, updatedBooksJson);
                     return new OperationResult { StatusCode = OperationStatusCode.Ok };
                 }
-                return new OperationResult { StatusCode = OperationStatusCode.NotFound, Message = "The requested book does not exist" };
+                return new OperationResult { StatusCode = OperationStatusCode.NotFound, Message = "The requested book does not exist." };
             }
             return new OperationResult { StatusCode = OperationStatusCode.InternalError, Message = "No data exist" };
         }
@@ -172,7 +176,24 @@ public class BookCollectionService : IBookCollectionService
             {
                 var fileText = File.ReadAllText(AppConfigurationConstants.BookCollectionFile);
                 var booksList = JsonSerializer.Deserialize<List<Book>>(fileText) ?? [];
-                var sortedBooks = booksList.Where(book => book.Title.Equals(bookSearch.Title) || book.Author.Equals(bookSearch.Author)).ToList();
+                var sortedBooks = new List<Book>();
+                if (bookSearch.Title != null && bookSearch.Author != null)
+                {
+                    sortedBooks = booksList.Where(book => book.Title.Equals(bookSearch.Title) && book.Author.Equals(bookSearch.Author)).ToList();
+                }
+                else if(bookSearch.Title == null && bookSearch.Author != null)
+                {
+                    sortedBooks = booksList.Where(book => book.Author.Equals(bookSearch.Author)).ToList();
+                }
+                else if (bookSearch.Title != null && bookSearch.Author == null)
+                {
+                    sortedBooks = booksList.Where(book => book.Title.Equals(bookSearch.Title)).ToList();
+                }
+                else
+                {
+                    sortedBooks = booksList;
+                }
+
                 return new OperationResultData<List<Book>> { StatusCode = OperationStatusCode.Ok, Data = sortedBooks };
             }
             return new OperationResultData<List<Book>> { StatusCode = OperationStatusCode.Ok, Data = [] };
