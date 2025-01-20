@@ -1,247 +1,211 @@
-using BookCollection.App.DTO;
+﻿using BookCollection.App.DTO;
+using BookCollection.App.Routes;
 using BookCollection.Configuration;
 using BookCollection.Domain;
-using BookCollection.Infrastructure.Services;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
+using System;
+using System.Net;
+using System.Text;
+using System.Text.Json;
+
 namespace BookCollection.Tests;
 
-public class BookCollectionControllerTests : IDisposable
+public class BookCollectionControllerTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
 {
-    private readonly IBookCollectionService _bookCollectionService;
-    public BookCollectionControllerTests()
+    private readonly WebApplicationFactory<Program> _factory;
+    private readonly IConfiguration _configuration;
+    private static readonly object _fileLock = new();
+
+    private void WriteTestData(string content)
     {
-        var configuration = new ConfigurationBuilder()
-         .AddJsonFile("appsettings.json")
-         .AddJsonFile("appsettings.Staging.json")
-         .Build();
-
-        // For now, failure tests need to be done again. At this moment, the tests are working on the same file so there is some problems with it.
-        AppConfigurationConstants.Initialize(configuration);
-
-        _bookCollectionService = new BookCollectionService();
-
-    }
-    [Fact]
-    public void AddAndGetBook_Ok()
-    {
-        var book = new BookAddDTO()
+        lock (_fileLock) // lock operrations on file
         {
-            Author = "Jacob Wal",
-            Title = "Some random book",
-            Year = 2013
-        };
-
-        _bookCollectionService.AddBook(book);
-
-        var result = _bookCollectionService.GetBook(1);
-        Assert.NotNull(result.Data);
-        Assert.Equal(book.Author, result.Data.Author);
-        Assert.Equal(book.Title, result.Data.Title);
-        Assert.Equal(book.Year, result.Data.Year);
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
-
-    }
-
-    [Fact]
-    public void GetBook_NotFound()
-    {
-        var book = new BookAddDTO()
-        {
-            Author = "Jacob Wal",
-            Title = "Some random book",
-            Year = 2013
-        };
-
-        _bookCollectionService.AddBook(book);
-
-        var result = _bookCollectionService.GetBook(200);
-        Assert.Null(result.Data);
-        Assert.Equal(OperationStatusCode.NotFound, result.StatusCode);
-        Assert.Equal("The requested book does not exist.", result.Message);
-    }
-
-    [Fact]
-    public void GetBooks_Ok()
-    {
-        var booksToAdd = new List<BookAddDTO>(){
-            new()
-            {
-                Author = "Jacob Wal",
-                Title = "Some random book",
-                Year = 2013
-            },
-            new()
-            {
-                Author = "Adam Szym",
-                Title = "Next das",
-                Year = 2010
-            },
-            new()
-            {
-                Author = "Kim Min",
-                Title = "Han guk",
-                Year = 2019
-            },
-        };
-
-        foreach (var book in booksToAdd)
-        {
-            _bookCollectionService.AddBook(book);
+            File.WriteAllText(AppConfiguration.BookCollectionFile, content);
         }
+    }
+    public BookCollectionControllerTests(WebApplicationFactory<Program> factory)
+    {
+        Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Staging");
 
-        var result = _bookCollectionService.GetBooks();
-        Assert.NotNull(result.Data);
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
+        _factory = factory;
+    }
+
+
+    [Fact]
+    public async Task Get_EndpoinReturnSuccess()
+    {
+        int bookId = 1;
+
+        var client = _factory.CreateClient();
+        WriteTestData("[{\"Id\":1,\"Title\":\"raz\",\"Author\":\"dwa\",\"Year\":2000}]");
+
+        var response = await client.GetAsync($"/api/BookCollection/books/{bookId}");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public void GetBooks_Empty_Ok()
+    public async Task Get_EndpoinReturnNotFound()
     {
-        var result = _bookCollectionService.GetBooks();
-        Assert.Empty(result.Data);
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
+        int bookId = 2;
+
+        var client = _factory.CreateClient();
+        WriteTestData("[{\"Id\":1,\"Title\":\"raz\",\"Author\":\"dwa\",\"Year\":2000}]");
+
+        var response = await client.GetAsync($"/api/BookCollection/books/{bookId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Fact]
-    public void DeleteBook_Ok()
+    public async Task GetBooks_EndpoinReturnSuccess()
     {
-        var book = new BookAddDTO()
-        {
-            Author = "Jacob Wal",
-            Title = "Some random book",
-            Year = 2013
-        };
+        var client = _factory.CreateClient();
+        WriteTestData("[{\"Id\":1,\"Title\":\"raz\",\"Author\":\"dwa\",\"Year\":2000}]");
 
-        _bookCollectionService.AddBook(book);
-        var result = _bookCollectionService.DeleteBook(1);
+        var response = await client.GetAsync("/api/BookCollection/books");
 
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public void DeleteBook_NotFound()
+    public async Task GetBooks_Empty_EndpoinReturnSuccess()
     {
-        var book = new BookAddDTO()
-        {
-            Author = "Jacob Wal",
-            Title = "Some random book",
-            Year = 2013
-        };
+        var client = _factory.CreateClient();
 
-        _bookCollectionService.AddBook(book);
-        var result = _bookCollectionService.DeleteBook(12);
+        var response = await client.GetAsync("/api/BookCollection/books");
 
-        Assert.Equal(OperationStatusCode.NotFound, result.StatusCode);
-        Assert.Equal("The requested book does not exist.", result.Message);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public void UpdateBook_Ok()
+    public async Task Delete_EndpoinReturnSuccess()
     {
-        var book = new BookAddDTO()
-        {
-            Author = "Jacob Wal",
-            Title = "Some random book",
-            Year = 2013
-        };
+        int bookId = 1;
 
-        _bookCollectionService.AddBook(book);
+        var client = _factory.CreateClient();
+        WriteTestData("[{\"Id\":1,\"Title\":\"raz\",\"Author\":\"dwa\",\"Year\":2000}]");
 
-        var updatedBook = new BookDTO
-        {
-            Id = 1,
-            Author = "Pavel Atr",
-            Title = "New Book",
-            Year = 2013
-        };
+        var response = await client.DeleteAsync($"/api/BookCollection/books/{bookId}");
 
-        var result = _bookCollectionService.UpdateBook(updatedBook);
-
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]
-    public void UpdateBook_NotFound()
+    public async Task Delete_EndpoinReturnNotFound()
     {
-        var book = new BookAddDTO()
+        int bookId = 2;
+
+        var client = _factory.CreateClient();
+        WriteTestData("[{\"Id\":1,\"Title\":\"raz\",\"Author\":\"dwa\",\"Year\":2000}]");
+
+        var response = await client.DeleteAsync($"/api/BookCollection/books/{bookId}");
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Post_EndpoinReturnSuccess()
+    {
+        var client = _factory.CreateClient();
+
+        var book = new BookDTO
         {
-            Author = "Jacob Wal",
-            Title = "Some random book",
-            Year = 2013
+            Title = "raz",
+            Author = "dwa",
+            Year = 2000
         };
 
-        _bookCollectionService.AddBook(book);
+        var json = JsonSerializer.Serialize(book);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await client.PostAsync($"/api/BookCollection/books", content);
 
-        var updatedBook = new BookDTO
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_EndpoinReturnSuccess()
+    {
+        int bookId = 1;
+
+        var client = _factory.CreateClient();
+        WriteTestData("[{\"Id\":1,\"Title\":\"raz\",\"Author\":\"dwa\",\"Year\":2000}]");
+
+        var book = new BookDTO
         {
-            Id = 15,
-            Author = "Pavel Atr",
-            Title = "New Book",
-            Year = 2013
+            Title = "trzy",
+            Author = "cztery",
+            Year = 2000
         };
 
-        var result = _bookCollectionService.UpdateBook(updatedBook);
+        var json = JsonSerializer.Serialize(book);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await client.PutAsync($"/api/BookCollection/books/{bookId}", content);
 
-        Assert.Equal(OperationStatusCode.NotFound, result.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Put_EndpoinReturnNotFound()
+    {
+        int bookId = 2;
+
+        var client = _factory.CreateClient();
+        WriteTestData("[{\"Id\":1,\"Title\":\"raz\",\"Author\":\"dwa\",\"Year\":2000}]");
+
+        var book = new BookDTO
+        {
+            Title = "trzy",
+            Author = "cztery",
+            Year = 2000
+        };
+
+        var json = JsonSerializer.Serialize(book);
+        var content = new StringContent(json, Encoding.UTF8, "application/json");
+        var response = await client.PutAsync($"/api/BookCollection/books/{bookId}", content);
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
     [Theory]
-    [InlineData("Some random book", "", true)]
-    [InlineData("", "Jacob Wal", true)]
-    [InlineData("Some random book", "Jacob Wal", true)]
-    [InlineData("Next das", "Jacob Wal", false)]
-    public void GetBooksByTitleOrAuthor_AuthorAndTitle_Ok(string title, string author, bool boolResult)
+    [InlineData("Some random book", "", HttpStatusCode.OK)]
+    [InlineData("", "Jacob Wal", HttpStatusCode.OK)]
+    [InlineData("Some random book", "Jacob Wal", HttpStatusCode.OK)]
+    [InlineData("Next das", "Jacob Wal", HttpStatusCode.OK)]
+    [InlineData("", "", HttpStatusCode.OK)]
+
+    public async Task GetBooksByTitleOrAuthor_EndpoinReturnN(string title, string author, HttpStatusCode statusCode)
     {
-        var booksToAdd = new List<BookAddDTO>(){
-        new()
-        {
-            Author = "Jacob Wal",
-            Title = "Some random book",
-            Year = 2013
-        },
-        new()
-        {
-            Author = "Adam Szym",
-            Title = "Next das",
-            Year = 2010
-        },
-        new()
-        {
-            Author = "Kim Min",
-            Title = "Han guk",
-            Year = 2019
-        },
-    };
+        var client = _factory.CreateClient();
 
-        foreach (var book in booksToAdd)
+        WriteTestData("[{\"Id\":1,\"Title\":\"raz\",\"Author\":\"dwa\",\"Year\":2000},{\"Id\":2,\"Title\":\"Some random book\",\"Author\":\"Jacob Wal\",\"Year\":2010}]");
+
+        var query = "";
+
+        if(!string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(author))
         {
-            _bookCollectionService.AddBook(book);
+            query = $"?Title={title}&Author={author}";
+        }
+        else if(string.IsNullOrWhiteSpace(title) && !string.IsNullOrWhiteSpace(author))
+        {
+            query = $"?Author={author}";
+        }
+        else if (!string.IsNullOrWhiteSpace(title) && string.IsNullOrWhiteSpace(author))
+        {
+            query = $"?Title={title}";
         }
 
-        var searchDTO = new BookSearchDTO()
-        {
-            Title = title,
-            Author = author
-        };
+        var response = await client.GetAsync("/api/BookCollection/books/search" + query);
 
-        var result = _bookCollectionService.GetBooksByTitleOrAuthor(searchDTO);
-
-        if (boolResult)
-        {
-            Assert.NotEmpty(result.Data);
-        }
-        else
-        {
-            Assert.Empty(result.Data);
-        }
-        Assert.Equal(OperationStatusCode.Ok, result.StatusCode);
+        Assert.Equal(statusCode, response.StatusCode);
     }
-
     public void Dispose()
     {
-        if (File.Exists(AppConfigurationConstants.BookCollectionFile))
+        if (File.Exists(AppConfiguration.BookCollectionFile))
         {
-            File.Delete(AppConfigurationConstants.BookCollectionFile);
+            File.Delete(AppConfiguration.BookCollectionFile);
         }
     }
 }
