@@ -1,11 +1,7 @@
 ﻿using BookCollection.App.DTO;
-using BookCollection.App.Routes;
 using BookCollection.Configuration;
-using BookCollection.Domain;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Configuration;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
-using System;
 using System.Net;
 using System.Text;
 using System.Text.Json;
@@ -176,7 +172,7 @@ public class BookCollectionControllerTests : IClassFixture<WebApplicationFactory
     [InlineData("Next das", "Jacob Wal", HttpStatusCode.OK)]
     [InlineData("", "", HttpStatusCode.OK)]
 
-    public async Task GetBooksByTitleOrAuthor_EndpoinReturnN(string title, string author, HttpStatusCode statusCode)
+    public async Task GetBooksByTitleOrAuthor_EndpoinReturnSuccess(string title, string author, HttpStatusCode statusCode)
     {
         var client = _factory.CreateClient();
 
@@ -200,6 +196,14 @@ public class BookCollectionControllerTests : IClassFixture<WebApplicationFactory
         var response = await client.GetAsync("/api/BookCollection/books/search" + query);
 
         Assert.Equal(statusCode, response.StatusCode);
+    }
+    public async Task GetBooksByTitleOrAuthor_EndpoinReturnBadRequest()
+    {
+        var client = _factory.CreateClient();             
+
+        var response = await client.GetAsync("/api/BookCollection/books/search?Name=Abc&Test=sa");
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
     public void Dispose()
     {
