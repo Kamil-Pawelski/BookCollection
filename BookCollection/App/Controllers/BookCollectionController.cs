@@ -1,7 +1,6 @@
 ﻿using BookCollection.App.DTO;
 using BookCollection.App.Routes;
 using BookCollection.Domain;
-using BookCollection.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BookCollection.App.Controllers;
@@ -50,7 +49,7 @@ public class BookCollectionController : ControllerBase
 
     [HttpPost]
     [Route(BookCollectionRoutes.AddBook)]
-    public IActionResult AddBook([FromBody] BookAddDTO bookDTO)
+    public IActionResult AddBook([FromBody] BookDTO bookDTO)
     {
         if (bookDTO == null)
         {
@@ -69,14 +68,14 @@ public class BookCollectionController : ControllerBase
 
     [HttpPut]
     [Route(BookCollectionRoutes.UpdateBook)]
-    public IActionResult UpdateBook([FromBody] BookDTO bookDTO)
+    public IActionResult UpdateBook([FromRoute] int id, [FromBody] BookDTO bookDTO)
     {
         if (bookDTO == null)
         {
             return BadRequest("Invalid data in the request body.");
         }
 
-        var result = _bookCollectionService.UpdateBook(bookDTO);
+        var result = _bookCollectionService.UpdateBook(id, bookDTO);
 
         if (result.StatusCode == OperationStatusCode.NotFound)
         {

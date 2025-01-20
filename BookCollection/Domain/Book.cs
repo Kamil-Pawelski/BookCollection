@@ -1,4 +1,4 @@
-﻿namespace BookCollection.Domain.Models;
+﻿namespace BookCollection.Domain;
 
 public class Book
 {
