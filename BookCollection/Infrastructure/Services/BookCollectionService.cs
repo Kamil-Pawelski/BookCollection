@@ -9,8 +9,7 @@ public class BookCollectionService : IBookCollectionService
 {
     private readonly IBookCollectionRepository _bookCollectionRepository;
     public static int CurrentBookId = 1;
-
-   
+    
     public BookCollectionService(IBookCollectionRepository bookCollectionRepository)
     {
         _bookCollectionRepository = bookCollectionRepository;
@@ -20,7 +19,6 @@ public class BookCollectionService : IBookCollectionService
             CurrentBookId = booksList.Max(book => book.Id) + 1;
         }
     }
-
 
     public OperationResultData<List<Book>> GetBooks()
     {

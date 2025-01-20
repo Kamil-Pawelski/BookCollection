@@ -170,7 +170,6 @@ public class BookCollectionControllerTests : IClassFixture<WebApplicationFactory
     [InlineData("", "Jacob Wal", HttpStatusCode.OK)]
     [InlineData("Some random book", "Jacob Wal", HttpStatusCode.OK)]
     [InlineData("Next das", "Jacob Wal", HttpStatusCode.OK)]
-    [InlineData("", "", HttpStatusCode.OK)]
 
     public async Task GetBooksByTitleOrAuthor_EndpoinReturnSuccess(string title, string author, HttpStatusCode statusCode)
     {
@@ -197,14 +196,17 @@ public class BookCollectionControllerTests : IClassFixture<WebApplicationFactory
 
         Assert.Equal(statusCode, response.StatusCode);
     }
+
+    [Fact]
     public async Task GetBooksByTitleOrAuthor_EndpoinReturnBadRequest()
     {
-        var client = _factory.CreateClient();             
+        var client = _factory.CreateClient();
 
         var response = await client.GetAsync("/api/BookCollection/books/search?Name=Abc&Test=sa");
 
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
+
     public void Dispose()
     {
         if (File.Exists(AppConfiguration.BookCollectionFile))

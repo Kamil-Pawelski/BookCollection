@@ -51,7 +51,7 @@ public class BookCollectionController : ControllerBase
     [Route(BookCollectionRoutes.AddBook)]
     public IActionResult AddBook([FromBody] BookDTO bookDTO)
     {
-        if (bookDTO == null)
+        if (string.IsNullOrEmpty(bookDTO?.Title) || string.IsNullOrEmpty(bookDTO?.Author) || string.IsNullOrEmpty(bookDTO?.Year.ToString()))
         {
             return BadRequest("Invalid data in the request body.");
         }
@@ -70,7 +70,7 @@ public class BookCollectionController : ControllerBase
     [Route(BookCollectionRoutes.UpdateBook)]
     public IActionResult UpdateBook([FromRoute] int id, [FromBody] BookDTO bookDTO)
     {
-        if (bookDTO == null)
+        if (string.IsNullOrEmpty(bookDTO?.Title) || string.IsNullOrEmpty(bookDTO?.Author) || string.IsNullOrEmpty(bookDTO?.Year.ToString()))
         {
             return BadRequest("Invalid data in the request body.");
         }
@@ -111,7 +111,7 @@ public class BookCollectionController : ControllerBase
     [Route(BookCollectionRoutes.GetBookByTitleOrAuthor)]
     public IActionResult GetBooksByTitleOrAuthor([FromQuery] BookSearchDTO bookSearchDTO)
     {
-        if (bookSearchDTO == null)
+        if (string.IsNullOrEmpty(bookSearchDTO?.Title) && string.IsNullOrEmpty(bookSearchDTO?.Author))
         {
             return BadRequest("Invalid data in the request body.");
         }
