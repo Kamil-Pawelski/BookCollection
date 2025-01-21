@@ -11,14 +11,13 @@ namespace BookCollection.Tests;
 public class BookCollectionControllerTests : IClassFixture<WebApplicationFactory<Program>>, IDisposable
 {
     private readonly WebApplicationFactory<Program> _factory;
-    private readonly IConfiguration _configuration;
     private static readonly object _fileLock = new();
 
     private void WriteTestData(string content)
     {
-        lock (_fileLock) // lock operrations on file
+        using (var writer = new StreamWriter(AppConfiguration.BookCollectionFile))
         {
-            File.WriteAllText(AppConfiguration.BookCollectionFile, content);
+            writer.WriteLine(content);
         }
     }
     public BookCollectionControllerTests(WebApplicationFactory<Program> factory)
@@ -27,7 +26,6 @@ public class BookCollectionControllerTests : IClassFixture<WebApplicationFactory
 
         _factory = factory;
     }
-
 
     [Fact]
     public async Task Get_EndpoinReturnSuccess()

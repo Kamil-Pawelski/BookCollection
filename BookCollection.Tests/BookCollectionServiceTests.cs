@@ -26,7 +26,6 @@ public class BookCollectionServiceTests : IDisposable
         _bookCollectionService = new BookCollectionService(_bookCollectionRepository);
     }
 
-
     [Fact]
     public void AddAndGetBook_Ok()
     {
@@ -121,7 +120,7 @@ public class BookCollectionServiceTests : IDisposable
 
         _bookCollectionService.AddBook(book);
 
-        var newBook = (_bookCollectionService.GetBooks().Data).FirstOrDefault();
+        var newBook = _bookCollectionService.GetBooks().Data.FirstOrDefault();
 
         var result = _bookCollectionService.DeleteBook(newBook.Id);
 
