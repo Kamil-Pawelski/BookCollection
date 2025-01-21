@@ -14,7 +14,7 @@ Book Collection is a project that provides an API for managing a collection of b
 |------------|---------------------------------------|---------------------------------|-----------------------------|-----------------------------------------------------------------|
 | GET | /api/bookcollection/books             | -                            | -                        | Return all books in the collection                       |
 | GET | /api/bookcollection/books/{id}        | (Integer) id                    | -                        |Return a book with a specific id                        |
-| POS | /api/bookcollection/books             | -                            |  title, author, year        | Create a new book                                       |
+| POST | /api/bookcollection/books             | -                            |  title, author, year        | Create a new book                                       |
 | PUT | /api/bookcollection/books/{id}        | (Integer) id                    |  title, author, year     | Update a book with a specific id                         |
 | DELETE | /api/bookcollection/books/{id}      | (Integer) id                    | -                     | Delete a book with a specific id                         |
 |GET | /api/bookcollection/books/search      | title, author        | -                        | Search books by title or author                         |
